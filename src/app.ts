@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import apiRoutes from './routes/api';
 
@@ -12,5 +12,16 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', apiRoutes);
+
+// 1. Tambah 404 Handler (dipanggil jika route tidak ditemukan)
+app.use((req: Request, res: Response) => {
+    res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} tidak ditemukan!` });
+});
+
+// 2. Tambah Global Error Handler (menangkap error tersembunyi)
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error('Terjadi error:', err.message);
+    res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server.' });
+});
 
 export default app;
