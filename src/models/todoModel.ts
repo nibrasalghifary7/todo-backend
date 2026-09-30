@@ -1,43 +1,67 @@
-import pool from "../config/db";
+import pool from '../config/db';
 
 export const TodoModel = {
-    getByUserId: async (userId: number) => {
-        const [rows] = await pool.query("SELECT * FROM todos WHERE user_id = ?", [userId]);
-        return rows;
-    },
+  getByUserId: async (userId: number, limit: number, offset: number) => {
+    const [rows] = await pool.query(
+      'SELECT * FROM todos WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?',
+      [userId, limit, offset]
+    );
+    return rows;
+  },
 
-    create: async (userId: number, task: string) => {
-        const [result]: any = await pool.query(
-            "INSERT INTO todos (user_id, task) VALUES (?, ?)", 
-            [userId, task]
-        );
-        return result.insertId;
-    },
+  countByUserId: async (userId: number): Promise<number> => {
+    const [rows]: any = await pool.query(
+      'SELECT COUNT(*) AS total FROM todos WHERE user_id = ?',
+      [userId]
+    );
+    return rows[0].total as number;
+  },
 
-    // 1. Tambah method getById
-    getById: async (id: number, userId: number) => {
-        const [rows]: any = await pool.query(
-            "SELECT * FROM todos WHERE id = ? AND user_id = ?",
-            [id, userId]
-        );
-        return rows[0];
-    },
+  getById: async (id: number, userId: number) => {
+    const [rows]: any = await pool.query(
+      'SELECT * FROM todos WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+    return rows[0];
+  },
 
-    // 2. Tambah method update
-    update: async (id: number, task: string, isCompleted: boolean, userId: number) => {
-        const [result]: any = await pool.query(
-            "UPDATE todos SET task = ?, is_completed = ? WHERE id = ? AND user_id = ?",
-            [task, isCompleted, id, userId]
-        );
-        return result.affectedRows;
-    },
+  create: async (userId: number, task: string) => {
+    const [result]: any = await pool.query(
+      'INSERT INTO todos (user_id, task) VALUES (?, ?)',
+      [userId, task]
+    );
+    return result.insertId;
+  },
 
-    // 3. Tambah method delete
-    delete: async (id: number, userId: number) => {
-        const [result]: any = await pool.query(
-            "DELETE FROM todos WHERE id = ? AND user_id = ?",
-            [id, userId]
-        );
-        return result.affectedRows;
+  update: async (id: number, task?: string, isCompleted?: boolean, userId?: number) => {
+    const fields: string[] = [];
+    const values: any[] = [];
+
+    if (task !== undefined) {
+      fields.push('task = ?');
+      values.push(task);
     }
+
+    if (isCompleted !== undefined) {
+      fields.push('is_completed = ?');
+      values.push(isCompleted ? 1 : 0);
+    }
+
+    if (fields.length === 0) return 0;
+
+    values.push(id, userId);
+    const [result]: any = await pool.query(
+      `UPDATE todos SET ${fields.join(', ')} WHERE id = ? AND user_id = ?`,
+      values
+    );
+    return result.affectedRows;
+  },
+
+  delete: async (id: number, userId: number) => {
+    const [result]: any = await pool.query(
+      'DELETE FROM todos WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+    return result.affectedRows;
+  },
 };
