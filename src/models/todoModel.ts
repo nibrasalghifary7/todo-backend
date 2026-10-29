@@ -33,29 +33,34 @@ export const TodoModel = {
     return result.insertId;
   },
 
-  update: async (id: number, task?: string, isCompleted?: boolean, userId?: number) => {
-    const fields: string[] = [];
-    const values: any[] = [];
+  update: async (
+  id: number,
+  task: string | undefined,
+  isCompleted: boolean | undefined,
+  userId: number
+) => {
+  const fields: string[] = [];
+  const values: any[] = [];
 
-    if (task !== undefined) {
-      fields.push('task = ?');
-      values.push(task);
-    }
+  if (task !== undefined) {
+    fields.push('task = ?');
+    values.push(task);
+  }
 
-    if (isCompleted !== undefined) {
-      fields.push('is_completed = ?');
-      values.push(isCompleted ? 1 : 0);
-    }
+  if (isCompleted !== undefined) {
+    fields.push('is_completed = ?');
+    values.push(isCompleted ? 1 : 0);
+  }
 
-    if (fields.length === 0) return 0;
+  if (fields.length === 0) return 0;
 
-    values.push(id, userId);
-    const [result]: any = await pool.query(
-      `UPDATE todos SET ${fields.join(', ')} WHERE id = ? AND user_id = ?`,
-      values
-    );
-    return result.affectedRows;
-  },
+  values.push(id, userId);
+  const [result]: any = await pool.query(
+    `UPDATE todos SET ${fields.join(', ')} WHERE id = ? AND user_id = ?`,
+    values
+  );
+  return result.affectedRows;
+},
 
   delete: async (id: number, userId: number) => {
     const [result]: any = await pool.query(
